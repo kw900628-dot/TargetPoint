@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Box Coordinator: Premium Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-layout fade-in">
+        <div class="left-panel slide-up">
+            <h2 class="panel-title">CONTROL PANEL</h2>
+            
+            <label class="upload-btn">
+                📂 이미지 업로드
+                <input type="file" id="imageInput" accept="image/*">
+            </label>
+            
+            <button class="clear-all-btn" id="clearBtn">🗑️ 모든 박스 삭제</button>
+
+            <div class="list-container">
+                <h4 class="list-title">Coordinate Log <span style="font-weight:400; opacity:0.7; font-size:12px;">(Max 10)</span></h4>
+                <div class="list-header">
+                    <span class="col-id">No.</span>
+                    <span class="col-data">X, Y, W, H</span>
+                    <span class="col-action">Copy</span>
+                </div>
+                <div class="coord-list" id="coordList">
+                    </div>
+            </div>
+        </div>
+
+        <div class="workspace-container slide-up-delay" id="dropZone">
+            <span class="placeholder-text" id="placeholderMsg">Drag & Drop Image Here</span>
+            
+            <div class="grid-layout">
+                <div id="ruler-corner"></div>
+                <canvas id="ruler-top"></canvas>
+                <canvas id="ruler-left"></canvas>
+
+                <div class="image-wrapper" id="imageWrapper">
+                    <img id="target-image" src="" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
