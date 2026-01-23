@@ -126,6 +126,34 @@ body {
     font-size: 16px;
 }
 
+.copy-all-btn {
+    padding: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    font-size: 16px;
+    margin-top: 10px; /* 위 버튼과 간격 */
+    
+    /* 디자인: 차분한 청록색 또는 테마에 맞는 밝은 갈색 */
+    background-color: var(--color-brown-light); 
+    color: #fff;
+    border: 1px solid var(--color-brown-dark);
+}
+
+.copy-all-btn:hover {
+    background-color: var(--color-brown-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.copy-all-btn:active {
+    transform: scale(0.98);
+}
+
+
 .upload-btn {
     background: linear-gradient(135deg, var(--color-gold-dark), var(--color-brown-light));
     color: #2b1100;
@@ -231,15 +259,16 @@ input[type="file"] { display: none; }
     grid-row: 2;
     background-color: #0d0505;
     cursor: crosshair;
-    display: flex;
-    /* 중요: JS에서 크기를 제어하므로 CSS에서 강제 크기 지정 제거 */
+    /* ✅ 추가/변경 (이미지가 박스를 꽉 채우도록) */
+    display: block; 
+    line-height: 0; /* 이미지 하단 미세한 여백 제거 */
 }
+    /* 중요: JS에서 크기를 제어하므로 CSS에서 강제 크기 지정 제거 */
+
 
 #target-image {
     display: block;
     /* CSS Max-width는 안전장치일 뿐, 실제 피팅은 JS가 담당 */
-    max-width: 100%; 
-    max-height: 100%;
     object-fit: contain;
     pointer-events: none;
     box-shadow: 0 0 20px rgba(0,0,0,0.8);

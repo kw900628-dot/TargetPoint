@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         coordList: document.getElementById('coordList'),
         placeholderMsg: document.getElementById('placeholderMsg'),
         clearBtn: document.getElementById('clearBtn'),
+        copyAllBtn: document.getElementById('copyAllBtn'), // 👈 [추가] 전체 복사 버튼
         // [추가] 배율 입력 필드
         scaleInputX: document.getElementById('scaleInputX'),
         scaleInputY: document.getElementById('scaleInputY')
@@ -85,6 +86,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     els.clearBtn.addEventListener('click', clearAllBoxes);
+
+    if (els.copyAllBtn) {
+        els.copyAllBtn.addEventListener('click', () => {
+            if (state.boxes.length === 0) {
+                alert("복사할 좌표가 없습니다.");
+                return;
+            }
+
+            // 현재 입력된 배율 가져오기
+            const userScaleX = parseFloat(els.scaleInputX.value) || 1.0;
+            const userScaleY = parseFloat(els.scaleInputY.value) || 1.0;
+
+            // 모든 박스 데이터를 순회하며 배율 적용 후 텍스트로 변환
+            const allCoords = state.boxes.map(box => {
+                const finalX = Math.round(box.data.x * userScaleX);
+                const finalY = Math.round(box.data.y * userScaleY);
+                const finalW = Math.round(box.data.w * userScaleX);
+                const finalH = Math.round(box.data.h * userScaleY);
+                return `${finalX}, ${finalY}, ${finalW}, ${finalH}`; // 형식: x, y, w, h
+            }).join('\n'); // 줄바꿈으로 구분
+
+            // 클립보드에 복사
+            navigator.clipboard.writeText(allCoords).then(() => {
+                const originalText = els.copyAllBtn.innerText;
+                els.copyAllBtn.innerText = "✅ 복사 완료!";
+                els.copyAllBtn.style.backgroundColor = "var(--color-gold-dark)";
+                els.copyAllBtn.style.color = "#2b1100";
+                
+                setTimeout(() => {
+                    els.copyAllBtn.innerText = originalText;
+                    els.copyAllBtn.style.backgroundColor = "";
+                    els.copyAllBtn.style.color = "";
+                }, 1500);
+            }).catch(err => {
+                console.error('Copy failed', err);
+                alert('복사에 실패했습니다.');
+            });
+        });
+    }
 
     // ★ [추가] 배율 입력값이 바뀌면 리스트 즉시 업데이트
     els.scaleInputX.addEventListener('input', renderList);
@@ -263,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.boxes.push(boxData);
 
-        if (state.boxes.length > 10) {
+        if (state.boxes.length > 20) {
             const removed = state.boxes.shift();
             if (removed && removed.el) removed.el.remove();
         }
