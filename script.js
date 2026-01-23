@@ -1,5 +1,6 @@
+// script.js
 document.addEventListener('DOMContentLoaded', () => {
-    // [1] DOM 요소 가져오기 & 방어적 체크
+    // [1] DOM 요소 가져오기
     const els = {
         imageInput: document.getElementById('imageInput'),
         targetImage: document.getElementById('target-image'),
@@ -9,22 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
         dropZone: document.getElementById('dropZone'),
         coordList: document.getElementById('coordList'),
         placeholderMsg: document.getElementById('placeholderMsg'),
-        clearBtn: document.getElementById('clearBtn')
+        clearBtn: document.getElementById('clearBtn'),
+        // [추가] 배율 입력 필드
+        scaleInputX: document.getElementById('scaleInputX'),
+        scaleInputY: document.getElementById('scaleInputY')
     };
 
-    for (const key in els) {
-        if (!els[key]) {
-            console.error(`Critical DOM element missing: ${key}`);
-            return;
-        }
-    }
-
-    // 상태 변수
+    // (기본 변수들은 그대로 유지)
     let state = {
         originalWidth: 0,
         originalHeight: 0,
-        displayedWidth: 0,  // 화면에 표시되는 실제 너비
-        displayedHeight: 0, // 화면에 표시되는 실제 높이
+        displayedWidth: 0,
+        displayedHeight: 0,
         isDragging: false,
         startX: 0,
         startY: 0,
@@ -35,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     els.targetImage.style.display = 'none';
 
-    // [2] 이미지 로드 함수
+    // [이미지 로드 및 이벤트 리스너들은 기존과 동일...]
     function loadImageFile(file) {
         if (!file || !file.type.startsWith('image/')) {
             alert("이미지 파일만 업로드 가능합니다.");
@@ -45,13 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (event) => {
             els.targetImage.src = event.target.result;
         };
-        reader.onerror = () => {
-            console.error("File reading failed");
-        };
         reader.readAsDataURL(file);
     }
 
-    // [3] 이벤트 리스너 바인딩
     els.imageInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) loadImageFile(e.target.files[0]);
     });
@@ -70,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.dataTransfer.files.length > 0) loadImageFile(e.dataTransfer.files[0]);
     });
 
-    // ★ 핵심: 이미지 로드 완료 시 "Fit to Screen" 로직 실행
     els.targetImage.onload = function() {
         els.targetImage.style.display = 'block';
         els.placeholderMsg.style.display = 'none';
@@ -79,17 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
         state.originalWidth = els.targetImage.naturalWidth;
         state.originalHeight = els.targetImage.naturalHeight;
         
-        // 화면에 꽉 차게 계산 및 적용
         calculateFitSize();
-        
-        // 자와 레이아웃 업데이트
         updateLayout();
         drawRulers();
     };
 
     window.addEventListener('resize', () => {
         if (els.targetImage.style.display !== 'none') {
-            calculateFitSize(); // 리사이즈 시에도 다시 맞춤
+            calculateFitSize();
             updateLayout();
             drawRulers();
         }
@@ -97,29 +86,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     els.clearBtn.addEventListener('click', clearAllBoxes);
 
+    // ★ [추가] 배율 입력값이 바뀌면 리스트 즉시 업데이트
+    els.scaleInputX.addEventListener('input', renderList);
+    els.scaleInputY.addEventListener('input', renderList);
 
-    // [4] 핵심 기능 구현
 
-    // ★ 이미지를 작업 영역(dropZone) 안에 꽉 차게 맞추는 함수
+    // [기능 함수들]
     function calculateFitSize() {
         if (!state.originalWidth) return;
-
-        // 드롭존의 현재 크기 (패딩 고려하여 약간 여유 둠: -50)
         const zoneW = els.dropZone.clientWidth - 50; 
         const zoneH = els.dropZone.clientHeight - 50;
-
-        // 비율 계산
         const ratioW = zoneW / state.originalWidth;
         const ratioH = zoneH / state.originalHeight;
-        
-        // 둘 중 더 작은 비율을 선택해야 이미지가 짤리지 않고 다 들어옴
-        const scale = Math.min(ratioW, ratioH, 1); // 1보다 크면(이미지가 작으면) 원본 크기 유지하고 싶으면 1 제거
+        const scale = Math.min(ratioW, ratioH, 1);
 
-        // 표시 크기 결정
         state.displayedWidth = Math.floor(state.originalWidth * scale);
         state.displayedHeight = Math.floor(state.originalHeight * scale);
 
-        // 이미지 요소에 명시적 크기 적용
         els.targetImage.style.width = `${state.displayedWidth}px`;
         els.targetImage.style.height = `${state.displayedHeight}px`;
     }
@@ -132,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateLayout() {
-        // 자의 CSS 크기를 이미지의 표시 크기와 동일하게 맞춤 (시각적 동기화)
         els.rulerTop.style.width = state.displayedWidth + 'px';
         els.rulerTop.style.height = '30px'; 
         els.rulerLeft.style.width = '30px'; 
@@ -140,79 +122,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawRulers() {
-        if (!state.originalWidth || !state.originalHeight) return;
-
-        // 캔버스의 '내부 해상도'는 원본 이미지 크기 (좌표 정확성 위함)
-        els.rulerTop.width = state.originalWidth; 
-        els.rulerTop.height = 30;
-        els.rulerLeft.width = 30; 
-        els.rulerLeft.height = state.originalHeight;
-
-        // 캔버스의 '표시 크기'는 CSS에서 제어하므로 Canvas Context는 자동으로 스케일링 됨
-        // 하지만 선명도를 위해 캔버스는 원본 크기로 그리고, CSS가 줄여서 보여줌.
-        
+        if (!state.originalWidth) return;
+        els.rulerTop.width = state.originalWidth; els.rulerTop.height = 30;
+        els.rulerLeft.width = 30; els.rulerLeft.height = state.originalHeight;
         const ctxTop = els.rulerTop.getContext('2d'); 
         const ctxLeft = els.rulerLeft.getContext('2d');
-
         const bgColor = '#261414'; 
         const mainColor = 'rgba(242, 214, 133, 1)'; 
 
         // Top Ruler
-        ctxTop.fillStyle = bgColor; 
-        ctxTop.fillRect(0, 0, state.originalWidth, 30);
-        ctxTop.strokeStyle = mainColor;
-        ctxTop.fillStyle = mainColor;
-        ctxTop.font = '24px "Noto Sans KR"'; // 글자 크기 키움 (축소되어 보일 것이므로)
-        ctxTop.lineWidth = 2; // 선 두께 키움
-
-        // 눈금 간격을 원본 픽셀 기준으로 그리기
-        const step = 100; // 큰 이미지일 수 있으니 눈금 간격 조정
+        ctxTop.fillStyle = bgColor; ctxTop.fillRect(0, 0, state.originalWidth, 30);
+        ctxTop.strokeStyle = mainColor; ctxTop.fillStyle = mainColor;
+        ctxTop.font = '24px "Noto Sans KR"'; ctxTop.lineWidth = 2;
+        const step = 100;
         for (let x = 0; x <= state.originalWidth; x += 10) {
             ctxTop.beginPath();
             let isMajor = (x % 100 === 0);
             let h = isMajor ? 15 : (x % 50 === 0 ? 10 : 5);
-            
             if (isMajor) ctxTop.fillText(x, x + 4, 25);
-            
-            ctxTop.moveTo(x + 0.5, 0); 
-            ctxTop.lineTo(x + 0.5, h); 
-            ctxTop.stroke();
+            ctxTop.moveTo(x + 0.5, 0); ctxTop.lineTo(x + 0.5, h); ctxTop.stroke();
         }
 
         // Left Ruler
-        ctxLeft.fillStyle = bgColor; 
-        ctxLeft.fillRect(0, 0, 30, state.originalHeight);
-        ctxLeft.strokeStyle = mainColor;
-        ctxLeft.fillStyle = mainColor;
-        ctxLeft.font = '24px "Noto Sans KR"';
-        ctxLeft.lineWidth = 2;
-
+        ctxLeft.fillStyle = bgColor; ctxLeft.fillRect(0, 0, 30, state.originalHeight);
+        ctxLeft.strokeStyle = mainColor; ctxLeft.fillStyle = mainColor;
+        ctxLeft.font = '24px "Noto Sans KR"'; ctxLeft.lineWidth = 2;
         for (let y = 0; y <= state.originalHeight; y += 10) {
             ctxLeft.beginPath();
             let isMajor = (y % 100 === 0);
             let w = isMajor ? 15 : (y % 50 === 0 ? 10 : 5);
-            
             if (isMajor) { 
-                ctxLeft.save(); 
-                ctxLeft.translate(25, y + 4); 
-                ctxLeft.rotate(-Math.PI/2); 
-                ctxLeft.fillText(y, 0, 0); 
-                ctxLeft.restore(); 
+                ctxLeft.save(); ctxLeft.translate(25, y + 4); ctxLeft.rotate(-Math.PI/2); 
+                ctxLeft.fillText(y, 0, 0); ctxLeft.restore(); 
             }
-            ctxLeft.moveTo(0, y + 0.5); 
-            ctxLeft.lineTo(w, y + 0.5); 
-            ctxLeft.stroke();
+            ctxLeft.moveTo(0, y + 0.5); ctxLeft.lineTo(w, y + 0.5); ctxLeft.stroke();
         }
     }
 
-    // [5] 박스 드래그 로직 (좌표 계산 로직 변경 없음 - CSS/JS Fit으로 자동 해결)
+    // [드래그 로직 - 기존과 동일]
     els.imageWrapper.addEventListener('mousedown', function(e) {
         if (e.target.closest('.box-close-btn')) return;
         if (els.targetImage.style.display === 'none') return;
         if (e.button !== 0) return;
 
         state.isDragging = true;
-        const rect = els.targetImage.getBoundingClientRect(); // 현재 보이는 이미지의 크기
+        const rect = els.targetImage.getBoundingClientRect();
         state.startX = e.clientX - rect.left;
         state.startY = e.clientY - rect.top;
 
@@ -233,8 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         state.currentBoxEl.style.top = state.startY + 'px';
         state.currentBoxEl.style.width = '0px';
         state.currentBoxEl.style.height = '0px';
-        state.currentBoxEl.style.pointerEvents = 'none';
-
         els.imageWrapper.appendChild(state.currentBoxEl);
     });
 
@@ -272,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ★ [핵심 수정 1] 박스 확정 시: Math.round 제거하고 소수점(Float) 그대로 저장
     function finalizeBox(element) {
-        // 중요: 표시된 이미지(rect)와 원본 이미지(state.originalWidth)의 비율을 계산
         const rect = els.targetImage.getBoundingClientRect();
         
         const screenLeft = parseFloat(element.style.left);
@@ -281,14 +233,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const screenW = parseFloat(element.style.width);
         const screenH = parseFloat(element.style.height);
 
-        // 표시 크기 대비 원본 크기의 비율 (Scale Factor)
+        // 화면상 픽셀 -> 원본 이미지 픽셀 변환 비율
         const scaleX = state.originalWidth / rect.width;
         const scaleY = state.originalHeight / rect.height;
         
-        const realW = Math.round(screenW * scaleX);
-        const realH = Math.round(screenH * scaleY);
-        const realCenterX = Math.round((screenLeft + screenW / 2) * scaleX);
-        const realCenterY = Math.round((screenTop + screenH / 2) * scaleY);
+        // 반올림하지 않고 정밀한 값 그대로 계산 (Float)
+        const realW = screenW * scaleX;
+        const realH = screenH * scaleY;
+        const realCenterX = (screenLeft + screenW / 2) * scaleX;
+        const realCenterY = (screenTop + screenH / 2) * scaleY;
 
         const currentId = state.boxIdCounter++;
 
@@ -304,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const boxData = {
             id: currentId,
             el: element,
+            // 정밀 데이터 저장
             data: { x: realCenterX, y: realCenterY, w: realW, h: realH }
         };
 
@@ -313,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const removed = state.boxes.shift();
             if (removed && removed.el) removed.el.remove();
         }
-        renderList();
+        renderList(); // 리스트 갱신 호출
     }
 
     function removeBoxById(id) {
@@ -325,12 +279,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ★ [핵심 수정 2] 리스트 렌더링 시: 입력된 비율(Scale)을 곱한 후 반올림하여 표시
     function renderList() {
         els.coordList.innerHTML = ''; 
+        
+        // 사용자가 입력한 배율 가져오기 (없으면 1.0)
+        const userScaleX = parseFloat(els.scaleInputX.value) || 1.0;
+        const userScaleY = parseFloat(els.scaleInputY.value) || 1.0;
+
         state.boxes.forEach(box => {
             const item = document.createElement('div');
             item.className = 'list-item';
-            const valString = `${box.data.x}, ${box.data.y}, ${box.data.w}, ${box.data.h}`;
+
+            // 저장된 Float 좌표 * 사용자 배율 -> 반올림
+            const finalX = Math.round(box.data.x * userScaleX);
+            const finalY = Math.round(box.data.y * userScaleY);
+            const finalW = Math.round(box.data.w * userScaleX);
+            const finalH = Math.round(box.data.h * userScaleY);
+
+            const valString = `${finalX}, ${finalY}, ${finalW}, ${finalH}`;
+            
             item.innerHTML = `
                 <div class="item-id">${box.id}</div>
                 <div class="item-data">${valString}</div>

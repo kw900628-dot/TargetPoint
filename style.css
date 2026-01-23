@@ -57,6 +57,55 @@ body {
     z-index: 100;
 }
 
+/* [추가] 배율 입력 섹션 스타일 */
+.scale-section {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--color-brown-dark);
+}
+
+.scale-label {
+    display: block;
+    color: var(--color-gold-dark);
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.scale-inputs {
+    display: flex;
+    gap: 10px;
+}
+
+.scale-inputs input {
+    flex: 1;
+    width: 0;               /* 👈 [추가] Flex 컨테이너 내에서 너비 계산 오류 방지 */
+    min-width: 0;           /* 👈 [추가] 기본 최소 너비 무시하고 줄어들 수 있게 함 */
+    box-sizing: border-box; /* 👈 [추가] 패딩과 테두리를 전체 너비에 포함 */
+    background: #0d0505;
+    border: 1px solid var(--color-brown-light);
+    color: var(--text-main);
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.scale-inputs input:focus {
+    outline: none;
+    border-color: var(--color-gold-light);
+    box-shadow: 0 0 5px rgba(242, 214, 133, 0.3);
+}
+
+.scale-guide {
+    margin: 5px 0 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+}
+
 .panel-title {
     margin: 0 0 10px 0;
     color: var(--color-gold-light);
