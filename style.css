@@ -303,3 +303,55 @@ input[type="file"] { display: none; }
     color: var(--color-brown-light); font-weight: 300; letter-spacing: 1px;
     pointer-events: none; font-size: 1.1em;
 }
+
+/* style.css 맨 아래에 추가 */
+
+.export-section {
+    border-top: 1px solid var(--color-brown-dark);
+    padding-top: 15px;
+    margin-top: 10px;
+}
+
+.sheet-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0d0505;
+    border: 1px solid var(--color-brown-light);
+    color: var(--text-muted);
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.sheet-input:focus {
+    outline: none;
+    border-color: var(--color-gold-light);
+    color: var(--text-main);
+}
+
+.export-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    text-align: center;
+    background-color: #2e7d32; /* 구글 시트 녹색 느낌 */
+    color: #fff;
+    border: 1px solid #1b5e20;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+    background-color: #388e3c;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+.export-btn:active {
+    transform: scale(0.98);
+}
+.export-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
