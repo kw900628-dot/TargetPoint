@@ -365,77 +365,70 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1000);
         }).catch(err => console.error('Copy failed', err));
     }
-});
 
-if (els.sendToSheetBtn) {
-    els.sendToSheetBtn.addEventListener('click', () => {
-        const url = els.sheetUrlInput.value.trim();
-        const batchName = els.batchNameInput.value.trim() || 'Untitled Batch';
+    // ▼▼▼▼▼ [위치 이동됨] 구글 시트 전송 로직이 이 안으로 들어왔습니다 ▼▼▼▼▼
+    if (els.sendToSheetBtn) {
+        els.sendToSheetBtn.addEventListener('click', () => {
+            const url = els.sheetUrlInput.value.trim();
+            const batchName = els.batchNameInput.value.trim() || 'Untitled Batch';
 
-        if (!url) {
-            alert("Google Apps Script 웹 앱 URL을 입력해주세요.");
-            return;
-        }
-        if (state.boxes.length === 0) {
-            alert("전송할 박스 데이터가 없습니다.");
-            return;
-        }
-
-        // 전송 버튼 비활성화 (중복 클릭 방지)
-        const originalBtnText = els.sendToSheetBtn.innerText;
-        els.sendToSheetBtn.innerText = "⏳ Sending...";
-        els.sendToSheetBtn.disabled = true;
-
-        // 현재 배율 적용하여 데이터 가공
-        const userScaleX = parseFloat(els.scaleInputX.value) || 1.0;
-        const userScaleY = parseFloat(els.scaleInputY.value) || 1.0;
-
-        const payloadRows = state.boxes.map(box => ({
-            id: box.id,
-            x: Math.round(box.data.x * userScaleX),
-            y: Math.round(box.data.y * userScaleY),
-            w: Math.round(box.data.w * userScaleX),
-            h: Math.round(box.data.h * userScaleY)
-        }));
-
-        const payload = {
-            batchName: batchName,
-            rows: payloadRows
-        };
-
-        // fetch API로 전송
-        // mode: 'no-cors'는 구글 앱스 스크립트 특성상 응답을 읽을 수 없게 만들 수 있으나,
-        // 단순 전송(fire and forget)에는 CORS 에러를 회피하는 가장 쉬운 방법입니다.
-        // 하지만 제대로 된 응답 확인을 위해 일반 POST를 시도하고 redirect를 따릅니다.
-        
-        fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.result === 'success') {
-                els.sendToSheetBtn.innerText = "✅ Success!";
-                els.sendToSheetBtn.style.backgroundColor = "var(--color-gold-dark)";
-                setTimeout(() => {
-                    els.sendToSheetBtn.innerText = originalBtnText;
-                    els.sendToSheetBtn.style.backgroundColor = "";
-                    els.sendToSheetBtn.disabled = false;
-                }, 2000);
-            } else {
-                throw new Error(JSON.stringify(data));
+            if (!url) {
+                alert("Google Apps Script 웹 앱 URL을 입력해주세요.");
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // CORS 문제 등으로 fetch가 실패해도 실제로는 전송되었을 수 있습니다.
-            // 구글 앱스 스크립트 Web App은 리다이렉트를 하기 때문에 
-            // 'no-cors' 모드로 보내거나, 에러가 나도 확인해보라고 안내하는 것이 안전합니다.
+            if (state.boxes.length === 0) {
+                alert("전송할 박스 데이터가 없습니다.");
+                return;
+            }
+
+            // 전송 버튼 비활성화
+            const originalBtnText = els.sendToSheetBtn.innerText;
+            els.sendToSheetBtn.innerText = "⏳ Sending...";
+            els.sendToSheetBtn.disabled = true;
+
+            // 현재 배율 적용하여 데이터 가공
+            const userScaleX = parseFloat(els.scaleInputX.value) || 1.0;
+            const userScaleY = parseFloat(els.scaleInputY.value) || 1.0;
+
+            const payloadRows = state.boxes.map(box => ({
+                id: box.id,
+                x: Math.round(box.data.x * userScaleX),
+                y: Math.round(box.data.y * userScaleY),
+                w: Math.round(box.data.w * userScaleX),
+                h: Math.round(box.data.h * userScaleY)
+            }));
+
+            const payload = {
+                batchName: batchName,
+                rows: payloadRows
+            };
             
-            alert("전송 중 오류가 발생했거나, 보안 정책(CORS)으로 응답을 받지 못했습니다.\n\n시트를 확인해보세요. 데이터가 들어갔다면 성공입니다!");
-            
-            els.sendToSheetBtn.innerText = originalBtnText;
-            els.sendToSheetBtn.disabled = false;
+            fetch(url, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result === 'success') {
+                    els.sendToSheetBtn.innerText = "✅ Success!";
+                    els.sendToSheetBtn.style.backgroundColor = "var(--color-gold-dark)";
+                    setTimeout(() => {
+                        els.sendToSheetBtn.innerText = originalBtnText;
+                        els.sendToSheetBtn.style.backgroundColor = "";
+                        els.sendToSheetBtn.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(JSON.stringify(data));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("전송 중 오류가 발생했거나, 보안 정책(CORS)으로 응답을 받지 못했습니다.\n\n시트를 확인해보세요. 데이터가 들어갔다면 성공입니다!");
+                els.sendToSheetBtn.innerText = originalBtnText;
+                els.sendToSheetBtn.disabled = false;
+            });
         });
-    });
-}
+    }
+    // ▲▲▲▲▲ 여기까지 ▲▲▲▲▲
+
+});
